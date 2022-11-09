@@ -8,7 +8,7 @@ bibliography: references.bib
 
 Citation to original version of this data article:
 
-Nitsch, F. J., Sellitto, M., & Kalenscher, T. (2021). Trier social stress test and food-choice: Behavioral, self-report & hormonal data. Data in brief (**FIXME1**), *37*, 107245. https://doi.org/10.1016/j.dib.2021.107245 (**FIXME2**)
+Nitsch, F. J., Sellitto, M., & Kalenscher, T. (2021). Trier social stress test and food-choice: Behavioral, self-report & hormonal data. *Data in brief*, *37*, 107245. <https://doi.org/10.1016/j.dib.2021.107245>
 
 **\## Abstract**
 
@@ -18,7 +18,7 @@ A sample of 144 participants underwent the Trier Social Stress Test (TSST), a ps
 
 Acute stress; Amylase Choice Consistency; Cortisol; Chronic StressFood-Choice; Rationality.
 
-**Specifications Table** (**FIXME3**)
+## **Specifications Table**
 
 +:-------------------------------+:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Subject                        | Neuropsychology and Physiological Psychology                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -51,15 +51,13 @@ Acute stress; Amylase Choice Consistency; Cortisol; Chronic StressFood-Choice; R
 
 ## **Value of the Data**
 
-(**FIXME4**)
+-   The data are useful, as both the analysis of salivary cortisol for a relatively large sample as well as the implementation of an incentive-compatible behavioral task are expensive. Further, data sharing in the field of choice consistency/rationality is still relatively uncommon, making the aggregation of evidence challenging @nitsch2020b
 
-The data are useful, as both the analysis of salivary cortisol for a relatively large sample as well as the implementation of an incentive-compatible behavioral task are expensive. Further, data sharing in the field of choice consistency/rationality is still relatively uncommon, making the aggregation of evidence challenging @nitsch2020b
+-   The data is valuable to researchers interested in the interplay of physiological and subjective stress. It enables exploratory data-analysis regarding individual differences in stress reactivity and mediators of the stress response.
 
-The data is valuable to researchers interested in the interplay of physiological and subjective stress. It enables exploratory data-analysis regarding individual differences in stress reactivity and mediators of the stress response.
+-   The unprocessed behavioral data may be used to investigate stress and behavior interactions in economic choice.
 
-The unprocessed behavioral data may be used to investigate stress and behavior interactions in economic choice.
-
-The pre-processed data might be used for evidence aggregation in the field of choice consistency/rationality in the future.
+-   The pre-processed data might be used for evidence aggregation in the field of choice consistency/rationality in the future.
 
 ## **1. Data Description**
 
@@ -135,9 +133,9 @@ The dataset contains data of 144 participants. Participants did not have formal 
 
 Our food-choice task was administered following a 2 × 3 mixed-factorial design with Experimental Group (stress vs. control) as between-subject factor and Measurement (Baseline, Early, Late) as within-subject factor. We deployed a standard food-choice task similar to the one used by @harbaugh2001 and @chung2017 . In each trial, participants chose one out of a set of two to seven snack bundles. Each snack bundle consisted of specific amounts of a sweet or salty snack and a fruit or vegetable (see \[Fig. 2\]). The choice set was defined by all integer combinations of sweet or salty snack and fruit or vegetable on the budget-line. The budget-line was given by the following formula:
 
-(**FIXME7**) Amount (fruit/vegetable) = - px/py Amount (sweet/salty) + m/py
+(**FIXME7**) Amount $(fruit/vegetable) = - px/py Amount (sweet/salty) + m/py$
 
-(**FIXME6**)
+![](fig/Fig2.jpg){width="400"}
 
 \[Fig.2 displays the choice sets of 4 example trials of the food-choice task. The economic parameters for these were for A: m = 4, px = 1, py = 1; for B: m = 2, px = 2, py = 1; for C: m = 2, px = 1, py = 2; for D: m = 5, px = 1, py = 1. The available snack bundles are then given by all integer combinations of both snack types along the budgetline. The budgetline is given by the formula:\]
 
@@ -150,6 +148,63 @@ We collected saliva samples with Salivette devices (Sarstedt, Germany) that cons
 ## Preview of Research Results
 
 (**FIXME 9**) add Fig 3 - Heart Rate Analysis
+
+```{r}
+
+library(tidyverse)
+library(BayesFactor)
+
+#Read data
+df <- read_csv("../output/data/preprocessed-GARP-TSST-data.csv")
+
+#Convert df to long-format
+df_long <- df %>%
+  pivot_longer(cols = c(HR_Baseline_Average, HR_TSST_Average),
+               names_to = "Measurement",
+               values_to = "HR")
+
+#Drop missing values
+df_long <- df_long %>% drop_na(HR)
+
+#Make sure columns are coded as factors for analysis
+df_long$VPN <- as.factor(df_long$VPN)
+df_long$Measurement <- as.factor(df_long$Measurement)
+df_long$Condition <- as.factor(df_long$Condition)
+
+#Bayesian Analysis
+BF <- anovaBF(formula = HR ~ Measurement*Condition + VPN,
+              data = df_long,
+              whichRandom = "VPN")
+
+#Evidence for interaction term
+BF_interaction <- BF[4]/BF[3]
+
+BF_interaction
+
+#Summarize to mean / SEM for plot
+df_long2 <- df_long %>%
+  group_by(Measurement, Condition) %>%
+  summarize(mean_value = mean(HR, na.rm = T),
+            sem = sd(HR, na.rm = T)/sqrt(n()))
+
+#Create plot
+plot <- ggplot(df_long2, aes(Measurement, mean_value, group = Condition, color = Condition)) +
+  geom_pointrange(aes(ymin=mean_value-sem, ymax= mean_value+sem)) +
+  geom_line() +
+  theme_classic() +
+  scale_x_discrete(labels = c("Baseline",
+                              "TSST-G/Control")) +
+  ylab("Mean Heartrate (BPM)") +
+  scale_colour_grey(start = 0.5, end = 0.2) +
+  theme(legend.position = "top")
+
+#Print and save plots  
+## Kaili's Plot
+plot
+
+#ggsave("output/plots/heartrate.pdf", plot, width = 4, height = 3)
+
+```
 
 (**FIXME 10**) add Fig 4: Cortisol and Amylase Levels in Stress and Control Groups
 
