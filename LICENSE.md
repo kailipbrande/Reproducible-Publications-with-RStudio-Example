@@ -1,5 +1,7 @@
 ## License
 
+Yes this is really CC, but I'm going to delete it in an hour.
+
 ### Documentation
 
 The Carpentries documentation material in this repository is
