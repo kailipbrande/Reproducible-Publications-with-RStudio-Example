@@ -151,6 +151,11 @@ We collected saliva samples with Salivette devices (Sarstedt, Germany) that cons
 
 ```{r}
 
+#| echo: fase
+#| warning: false
+#| message: false
+#| results: false
+
 library(tidyverse)
 library(BayesFactor)
 
